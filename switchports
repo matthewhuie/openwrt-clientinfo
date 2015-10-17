@@ -1,0 +1,37 @@
+#!/bin/sh
+
+! [ -f /sbin/swconfig ] && {
+  echo swconfig not found
+  exit 1
+}
+
+echo -e "Port\tLink\tSpeed\t\tDuplex\t\t802.11q\t\tVLANs"
+
+OUTPUT=`swconfig dev $(swconfig list | cut -d\  -f2) show`
+
+IFS='
+'
+for i in `echo "$OUTPUT" | grep "link: port:"`; do
+  VLANS=""
+  PORT=`echo "$i" | xargs | cut -d\: -f3 | cut -d\  -f1`
+  LINK=`echo "$i" | xargs | cut -d\: -f4 | cut -d\  -f1`
+  TAGGING=`echo "$OUTPUT" | grep -A 2 VLAN | grep $PORT"t"`
+  if [ "$TAGGING" == "" ]; then
+    TAGGING="no"
+  else
+    TAGGING="yes"
+  fi
+  for j in `echo "$OUTPUT" | grep VLAN | cut -d\: -f1`; do
+    VLAN=`echo "$OUTPUT" | grep -A 2 "$j" | grep "ports:" | cut -d\: -f2 | grep " "$PORT`
+    if [ "$VLAN" != "" ]; then
+      VLANS=$VLANS`echo "$j" | cut -d\  -f2`" "
+    fi
+  done
+  if [ "$LINK" == "down" ]; then
+    echo -e "$PORT\t$LINK\t-\t\t-\t\t$TAGGING\t\t-"
+  else
+    SPEED=`echo "$i" | xargs | cut -d\: -f5 | cut -d\  -f1`
+    DUPLEX=`echo "$i" | xargs | cut -d\  -f5`
+    echo -e "$PORT\t$LINK\t$SPEED\t$DUPLEX\t$TAGGING\t\t$VLANS"
+  fi
+done

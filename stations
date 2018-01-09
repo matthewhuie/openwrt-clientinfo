@@ -1,18 +1,19 @@
 #!/bin/sh
 
-! [ -f /usr/bin/iwinfo ] && ! [ -f /usr/sbin/iwconfig ] && {
-  echo iwinfo/iwconfig not found
+! [ -f /usr/bin/iwinfo ] && {
+  echo iwinfo not found
   exit 1
 }
 
-if ! [ -f /tmp/dhcp.leases ]; then
-  DHCP=`ssh -i /etc/dropbear/dropbear_rsa_host_key 10.0.0.10 "cat /tmp/dhcp.leases"`
-else
-  DHCP=`cat /tmp/dhcp.leases`
-fi
+! [ -f /tmp/dhcp.leases ]; then
+  echo dhcp.leases not found
+  exit 1
+}
+
+DHCP=`cat /tmp/dhcp.leases`
 echo -e "IP address\tSignal\tTX/RX\t\tHW address\t\tDevice\tHostname"
 
-for i in `iwconfig 2>&1 | grep IEEE | cut -d\  -f1`; do
+for i in `iwinfo | cut -d\  -f1 | xargs`; do
   DUMP=`iwinfo $i assoclist`
   for j in `echo "$DUMP" | grep SNR | cut -d\  -f1`; do
     STATION=`echo "$DUMP" | grep -A 3 $j`

@@ -5,11 +5,7 @@
   exit 1
 }
 
-<<<<<<< HEAD
-! [ -f /tmp/dhcp.leases ]; then
-=======
 ! [ -f /tmp/dhcp.leases ] && {
->>>>>>> Updating stations for 17.01.4; removing dependency for iwconfig
   echo dhcp.leases not found
   exit 1
 }
